@@ -1,0 +1,311 @@
+#include <bits/stdc++.h>
+using namespace std;
+const int N=10e5+7;
+int R[N];
+
+
+
+int string_to_int(string s){
+		int n=0;
+		int p=s.length();R[0]=0;R[1]=2;R[2]=3;R[3]=4;R[4]=5;R[5]=6;
+		for(int i=p-1;i>=0;i--){
+		int k=s[i]-48;
+		int j=p-1-i;
+			n=n+k*((int)(pow(10,j)));
+		}
+		return n;
+	}
+
+string op_code_type(string s1){
+    if(s1=="add"||s1=="sub"||s1=="mul"||s1=="div"||s1=="and"||s1=="or")
+    return "R";
+    else if(s1=="addi"||s1=="subi"||s1=="muli"||s1=="divi"||s1=="andi"||s1=="ori"||s1=="bne"||s1=="beq"||s1=="lw"||s1=="sw")
+    return "I";
+    else
+    return "J";
+}
+void instruction_to_str_lwsw(string &s3,string &s4,int j,int n,string S){int i;
+	for(i=j+1;i<n;i++){
+	          if(S[i]!='(')
+	          {
+	          s3=s3+S[i];
+	          }
+	          else{j=i;
+	          break;}
+	      }
+	      for(int i=j+1;i<n;i++){
+	          if(S[i]!=')')
+	          {
+	          s4=s4+S[i];
+	          }
+	          else{j=i;
+	          break;}
+	      }
+	
+}
+
+int instruction_to_str(string &s2,int j,int n,string S){
+    for(int i=j+1;i<n;i++){
+	          if(S[i]!=',')
+	          {
+	          s2=s2+S[i];
+	          }
+	          else{j=i;
+	          break;}
+	      }
+	      return j;
+}
+
+string func_r(string s){
+    if(s=="add")
+    return "100000";
+    else if(s=="sub")
+    return "100001";
+    else if(s=="mul")
+    return "100010";
+    else if(s=="div")
+    return "100011";
+    else if(s=="and")
+    return "100100";
+    else if(s=="or")
+    return "100101";
+    else if(s=="xor")
+    return "100110";
+    else
+    return "error";
+}
+int  bin_to_int(string y)
+{
+        int x=0,count=0;
+        int n=y.length();
+        
+        for(int i=n-1;i>=0;i--)
+        {
+            y[i]=y[i]-48;
+                x=x+(y[i]*((int)pow(2,count)));
+                count++;
+                
+        }
+        return x;
+}
+
+void alu_op(string sf){
+    string s1,s2,s3,s4,s5="";
+    s1=sf.substr(0,6);
+    if(s1=="000000"){
+        s2=sf.substr(6,5);
+        s3=sf.substr(11,5);
+        s4=sf.substr(16,5);
+        s5=sf.substr(26,6);
+       int int_s2=bin_to_int(s2);
+       int int_s3=bin_to_int(s3);
+       int int_s4=bin_to_int(s4);
+  
+       
+    }
+    
+}
+
+string opcode_of_imm(string &s1){
+	if(s1=="addi")
+	return "001000";
+	else if(s1=="subi")
+	return "001001";
+	else if(s1=="muli")
+	return "001010";
+	else if(s1=="divi")
+	return "001011";
+	else if(s1=="andi")
+	return "001100";
+	else if(s1=="ori")
+	return "001101";
+	else if(s1=="xori")
+	return "001110";
+	else if(s1=="beq")
+	return "001111";
+	else if(s1=="bne")
+	return "010000";
+	else if(s1=="lw")
+	return "010001";
+	else if(s1=="sw")
+	return "010010";
+	else 
+	return "error";
+	
+}
+
+int main() {
+    map<string,int> m;
+    int h=1;
+	vector<string> v;
+	string s;
+	vector<string> v2=v;
+	        map<string,int>:: iterator it=m.begin();
+	   
+	       int y=0;
+	      
+	while(getline(cin,s)){
+	    v.push_back(s);m.insert({s,h});h++;
+	}
+	
+	for(string &s: v){
+	    string S=s;string s1="";int j=0;
+	    int n=S.length();
+	    for(int i=0;i<S.length();i++){
+	        
+	        if(S[i]!=' '){
+	            s1=s1+S[i];
+	        }
+	        else{
+	            j=i;
+	            break;
+	        }
+	        
+	    }
+	  string c_op=op_code_type(s1);
+	  
+	  if(c_op=="R"){
+	    string s2,s3,s4="";
+	     j=instruction_to_str(s2,j,n,S);
+	      j=instruction_to_str(s3,j,n,S);
+	       j=instruction_to_str(s4,j,n,S);
+	      int int_s2,int_s3,int_s4=0;
+	       if(s2[0]=='$'){
+	     int_s2= string_to_int(s2.substr(1,s2.length()-1));
+	    s2=bitset<5>(int_s2).to_string();}
+	    if(s3[0]=='$'){
+	     int_s3= string_to_int(s3.substr(1,s3.length()-1));
+	    s3=bitset<5>(int_s3).to_string();}
+	    if(s4[0]=='$'){
+	     int_s4= string_to_int(s4.substr(1,s4.length()-1));
+	    s4=bitset<5>(int_s4).to_string();}
+	    string func=func_r(s1);
+	  
+	    
+	    cout<<"000000"+s3+s4+s2+"00000"+func<<endl;
+	   // cout<<"000000"+s3.substr(0,2)<<endl;
+	    //cout<<s3.substr(2,3)+s4.substr(0,5)<<endl;
+	   // cout<<s2.substr(0,5)+"000"<<endl;
+	   // cout<<"00"+func<<endl;
+	   
+	  }
+	  else if(c_op=="I"){
+	      
+	      if(s1[0]!='b'&&s1[0]!='l'&&s1[0]!='s'){
+	      string s2,s3,s4="";
+	      s1=opcode_of_imm(s1);
+	      j=instruction_to_str(s2,j,n,S);
+	      j=instruction_to_str(s3,j,n,S);
+	       j=instruction_to_str(s4,j,n,S);
+	      
+	      int int_s2,int_s3,int_s4=0;
+	      
+	       if(s2[0]=='$'){
+	     int_s2= string_to_int(s2.substr(1,s2.length()-1));
+	    s2=bitset<5>(int_s2).to_string();}
+	    if(s3[0]=='$'){
+	     int_s3= string_to_int(s3.substr(1,s3.length()-1));
+	    s3=bitset<5>(int_s3).to_string();}
+	    
+	     int_s4= string_to_int(s4.substr(0,s4.length()));
+	    s4=bitset<16>(int_s4).to_string();
+	   cout<<s1+s2+s3+s4<<endl;
+	   //cout<<s1+s2.substr(0,2)<<endl;
+	    //cout<<s2.substr(2,3)+s3.substr(0,5)<<endl;
+	   // cout<<s4.substr(0,8)<<endl;
+	   // cout<<s4.substr(8,8)<<endl;
+	      }
+	      else{
+	          string s2,s3,s4="";
+	          s1=opcode_of_imm(s1);
+	          if(s1=="010000"||s1=="001111"){
+	          j=instruction_to_str(s2,j,n,S);
+	      j=instruction_to_str(s3,j,n,S);
+	       j=instruction_to_str(s4,j,n,S);
+	       int int_s2,int_s3,int_s4=0;
+	      
+	       if(s2[0]=='$'){
+	     int_s2= string_to_int(s2.substr(1,s2.length()-1));
+	    s2=bitset<5>(int_s2).to_string();}
+	    if(s3[0]=='$'){
+	     int_s3= string_to_int(s3.substr(1,s3.length()-1));
+	    s3=bitset<5>(int_s3).to_string();}
+	    string s5=s4+":";
+	   
+	   it=m.find(s5);
+	          int it_int=it->second+1;
+	          s4=bitset<16>(it_int).to_string();
+	          cout<<s1+s2+s3+s4<<endl;
+	  // cout<<s1+s2.substr(0,2)<<endl;
+	    //cout<<s2.substr(2,3)+s3.substr(0,5)<<endl;
+	    //cout<<s4.substr(0,8)<<endl;
+	    //cout<<s4.substr(8,8)<<endl;
+	          }
+	    
+	    if(s1=="010010"||s1=="010001"){
+	    	int int_s2,int_s3,int_s4=0;
+	    	j=instruction_to_str(s2,j,n,S);
+	    	instruction_to_str_lwsw(s3,s4,j,n,S);
+	    
+	    	if(s2[0]=='$'){
+	     int_s2= string_to_int(s2.substr(1,s2.length()-1));
+	    s2=bitset<5>(int_s2).to_string();}
+	  
+	     int_s3= string_to_int(s3.substr(0,s3.length()));
+	    s3=bitset<16>(int_s3).to_string();
+	    if(s4[0]=='$'){
+	     int_s4= string_to_int(s4.substr(1,s4.length()-1));
+	    s4=bitset<5>(int_s4).to_string();}
+	   
+	  cout<<s1+s2+s4+s3<<endl;
+	  //cout<<s1+s2.substr(0,2)<<endl;
+	    //cout<<s2.substr(2,3)+s4.substr(0,5)<<endl;
+	   // cout<<s3.substr(0,8)<<endl;
+	   // cout<<s3.substr(8,8)<<endl;  
+	}
+	    
+	      
+	      }
+	      
+	  }
+	else{
+	      if(s1=="j"){
+	          s1="111111";
+	          string s2="";
+	          for(int k=j+1;k<n;k++){
+	              if(S[k]!=' ')
+	              s2=s2+S[k];
+	              else
+	              break;
+	          }s2=s2+":";
+	          it=m.find(s2);
+	          int it_int=it->second+1;
+	         
+	         s2=bitset<26>(it_int).to_string();
+	        
+	        cout<<s1+s2<<endl;
+	         // cout<<s1+s2.substr(0,2)<<endl;
+	          //cout<<s2.substr(2,8)<<endl;
+	          //cout<<s2.substr(10,8)<<endl;
+	          //cout<<s2.substr(18,8)<<endl;
+	          
+	      }
+	      else if(s1[0]=='*'){
+	          cout<<"11111111111111111111111111111111"<<endl;
+	          //cout<<"11111111"<<endl;
+	          //cout<<"11111111"<<endl;
+	          //cout<<"11111111"<<endl;
+	      }
+	      else{
+	          cout<<"00000000000000000000000000000000"<<endl;
+	          //cout<<"00000000"<<endl;
+	          //cout<<"00000000"<<endl;
+	          //cout<<"00000000"<<endl;
+	      }
+	  } 
+	   
+	    
+	}
+	
+	return 0;
+}

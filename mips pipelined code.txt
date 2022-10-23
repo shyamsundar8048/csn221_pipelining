@@ -1,0 +1,432 @@
+#include<bits/stdc++.h>
+using namespace std;
+#define MemSize 4096 
+
+
+bitset<32> sign_extend(bitset<16> Imm)
+{ 
+    string immediate = Imm.to_string();
+    bitset<32> sign_extended_immd;
+    
+    if (immediate[0] == '0')                           
+    {
+        
+        sign_extended_immd = bitset<32>("0000000000000000"+immediate);
+    }                   
+    else
+    {
+        
+        sign_extended_immd = bitset<32>("1111111111111111"+immediate);               
+    }
+    return sign_extended_immd;
+}
+
+
+int  bin_to_int(string y)
+{
+        int x=0,count=0;
+        int n=y.length();
+        
+        for(int i=n-1;i>=0;i--)
+        {
+            y[i]=y[i]-48;
+                x=x+(y[i]*((int)pow(2,count)));
+                count++;
+                
+        }
+        return x;
+}
+
+bitset<32> Reg[32]={0};
+
+struct Write_back {
+    bitset<32>  Wrt_data;
+    bitset<5>   reg_Rd;
+    bitset<5>   Rt;     
+    bitset<5>   Wrt_reg;
+    bool  wrt_enable;
+    bool run;  
+    
+    
+   
+};
+
+struct Memory {
+    bitset<32>  ALUresult;
+    bitset<32>  Store_data;
+    bitset<5>   reg_Rd;
+    bitset<5>   Rt;    
+    bitset<5>   Wrt_reg;
+    bool   rd_mem;
+    bool   wrt_mem; 
+    bool  wrt_enable;    
+    bool run;  
+    
+    
+};
+
+struct EXStruct {
+    bitset<32>  read_reg1;
+    bitset<32>  read_reg2;
+    bitset<16>  immd;
+    bitset<5>   Wrt_reg;
+    bitset<5>   reg_Rd;
+    bitset<5>   Rt;
+    bool is_J_type;
+    bool is_I_type;
+    bool rd_mem;
+    bool wrt_mem; 
+    int alu_operation;     
+    bool wrt_enable;
+    bool run;  
+   
+   
+};
+
+struct Ins_DStruct {
+    bitset<32>  Instruct;
+    bool run;  
+     
+};
+
+
+struct Ins_FStruct {
+    int PC;
+    bool run;  
+   
+};
+
+
+
+
+
+
+
+struct state_prop {
+    Ins_FStruct    IF;
+    Ins_DStruct    ID;
+    EXStruct    EX;
+    Memory   MEM;
+    Write_back    WB;
+};
+class Insmem{
+public:
+        bitset<32> INSTRUCTION;
+             
+        bitset<32> read_Instruction(int Read_Addr) 
+        {    
+             ifstream inst_mem;
+            
+            string s; int i=0;
+            inst_mem.open("inputf.in");
+            if (inst_mem.is_open())
+            {
+                while (getline(inst_mem,s)&&(i<=(Read_Addr/4)))
+                {      
+                    INSTRUCTION= bitset<32>(s);
+                    i++;
+                }                    
+            }
+            else cout<<"file not found";
+            inst_mem.close(); 
+            return INSTRUCTION;     
+        }     
+};
+
+
+int main()
+{    
+    
+       Ins_FStruct IF ={0,0};
+    Ins_DStruct ID = {0,1}; 
+    EXStruct EX = {0,0,0,0,0,0,0,0,0,1,0,1};
+    Memory MEM = {0,0,0,0,0,0,0,0,1};
+    Write_back WB = {0,0,0,0,0,1};
+    state_prop state = {IF,ID,EX,MEM,WB };
+  state_prop new_state=state;
+  Insmem myInsMem;
+  bitset<32> INSTRUCTION;
+    bitset<32> Instruct;
+    string opcode;
+    string func; 
+    bitset<5> reg_Rd;
+    bitset<5> Rt;
+    bitset<5> Rd; 
+    bitset<16> immd;
+
+    int cycle_no = 0; 
+
+     while (1) {
+
+
+                    /**Write Back****/
+if (state.WB.run==0)
+        {
+            if (state.WB.wrt_enable==1)
+            {
+            Reg[state.WB.Wrt_reg.to_ulong()]=state.WB.Wrt_data;
+            }         
+        }
+                    /**Write Back****/
+
+
+
+                         /***Memory****/
+if(state.MEM.run==0){
+if (state.MEM.wrt_enable==1)
+            {
+                new_state.WB.Wrt_data = state.MEM.ALUresult;
+            }   
+
+            new_state.WB.reg_Rd = state.MEM.reg_Rd;
+            new_state.WB.Rt = state.MEM.Rt;             
+            new_state.WB.Wrt_reg = state.MEM.Wrt_reg;                      
+            new_state.WB.wrt_enable = state.MEM.wrt_enable;             
+        }
+        new_state.WB.run = state.MEM.run;
+
+      if( state.MEM.run==0){
+        if ((new_state.WB.Wrt_reg == state.EX.reg_Rd) || ((new_state.WB.Wrt_reg == state.EX.Rt)))  //stall
+                 {        
+                         
+                    new_state.MEM.run = state.EX.run;
+                     new_state.EX =state.EX;
+                     new_state.ID = state.ID;
+                    new_state.IF = state.IF;
+
+                  
+                     state = new_state;
+                    cycle_no ++;
+
+                     continue;
+             }
+       
+}
+
+
+
+                         /***Execution***/
+if(state.EX.run==0){
+   
+    if(state.EX.is_I_type==0){
+if(state.EX.wrt_enable==1){
+    if(state.EX.alu_operation==32){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()+state.EX.read_reg2.to_ulong();
+        }
+        else if(state.EX.alu_operation==33){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()-state.EX.read_reg2.to_ulong();
+        }
+        else if(state.EX.alu_operation==34){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()*state.EX.read_reg2.to_ulong();
+        }
+        else if(state.EX.alu_operation==35){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()/state.EX.read_reg2.to_ulong();
+        }
+       else if(state.EX.alu_operation==36){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()&state.EX.read_reg2.to_ulong();
+        }
+        else if(state.EX.alu_operation==37){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()|state.EX.read_reg2.to_ulong();
+        }
+        else if(state.EX.alu_operation==38){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()^state.EX.read_reg2.to_ulong();
+        }
+
+    }
+    else{
+       new_state.MEM.ALUresult = 0;
+    }
+}
+else{
+    if(state.EX.alu_operation==8){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()+sign_extend(state.EX.immd).to_ulong();
+        //cout<<new_state.MEM.ALUresult<<endl;
+        }
+        else if(state.EX.alu_operation==9){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()-sign_extend(state.EX.immd).to_ulong();
+        }
+        else if(state.EX.alu_operation==10){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()*sign_extend(state.EX.immd).to_ulong();
+        }
+        else if(state.EX.alu_operation==11){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()/sign_extend(state.EX.immd).to_ulong();
+        }
+        else if(state.EX.alu_operation==12){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()&sign_extend(state.EX.immd).to_ulong();
+        }
+        else if(state.EX.alu_operation==13){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()|sign_extend(state.EX.immd).to_ulong();
+        }
+        else if(state.EX.alu_operation==14){
+            new_state.MEM.ALUresult=state.EX.read_reg1.to_ulong()^sign_extend(state.EX.immd).to_ulong();
+        }
+}
+new_state.MEM.Store_data = state.EX.read_reg2;
+            new_state.MEM.reg_Rd = state.EX.reg_Rd;
+            new_state.MEM.Rt = state.EX.Rt;            
+            new_state.MEM.Wrt_reg = state.EX.Wrt_reg;              
+            new_state.MEM.wrt_enable = state.EX.wrt_enable;           
+            new_state.MEM.rd_mem = state.EX.rd_mem;
+            new_state.MEM.wrt_mem = state.EX.wrt_mem;
+}
+new_state.MEM.run = state.EX.run;
+                    
+
+
+                     /***Decode**/
+        if(state.ID.run==0){
+            
+        Instruct=state.ID.Instruct;
+       
+            opcode = Instruct.to_string().substr(0,6);
+            
+            reg_Rd = bitset<5>(Instruct.to_string().substr(11,5));
+           
+            new_state.EX.reg_Rd = reg_Rd;
+            new_state.EX.read_reg1 = Reg[reg_Rd.to_ulong()];   
+            Rt = bitset<5>(Instruct.to_string().substr(6,5));
+            new_state.EX.Rt = Rt;
+            new_state.EX.read_reg2 = Reg[Rt.to_ulong()];
+            
+            immd= bitset<16>(Instruct.to_string().substr(16,16)); 
+            new_state.EX.immd = immd;
+            
+            Rd = bitset<5>(Instruct.to_string().substr(16,5));
+        func = Instruct.to_string().substr(26,6);
+              
+    if(opcode=="000000"){
+        
+            new_state.EX.Wrt_reg=Rd;
+            new_state.EX.is_I_type = 0;
+            new_state.EX.alu_operation=bin_to_int(func);
+            new_state.EX.wrt_enable = 1;
+                new_state.EX.rd_mem = 0;
+                new_state.EX.wrt_mem = 0; 
+                new_state.EX.run=0;
+}
+if(opcode=="001000"||opcode=="001001"||opcode=="001010"||opcode=="001011"){
+                 
+                new_state.EX.Wrt_reg = Rt;  
+                
+                new_state.EX.is_I_type = 1;               
+                new_state.EX.alu_operation = bin_to_int(opcode);
+                new_state.EX.wrt_enable = 1;                
+                new_state.EX.rd_mem = 0;
+                new_state.EX.wrt_mem = 0; 
+                new_state.EX.run=0;
+            }
+    if(opcode=="001111"||opcode=="010000"){
+    new_state.EX.Wrt_reg = 0;  
+                
+                new_state.EX.is_I_type = 1;               
+                new_state.EX.alu_operation = bin_to_int(opcode);
+                new_state.EX.wrt_enable = 0;                
+                new_state.EX.rd_mem = 0;
+                new_state.EX.wrt_mem = 0;
+                
+                if (Reg[reg_Rd.to_ulong()] == Reg[Rt.to_ulong()])
+                {
+                   
+                    new_state.EX.run = 0;
+                    new_state.ID.run = 1;
+                    
+                    new_state.IF.PC =  bitset<30>(sign_extend(immd).to_string().substr(2,30)).to_ulong()*4;  
+                    new_state.IF.run = 0;
+                       
+                    state = new_state;
+                    cycle_no ++;
+                    
+                    continue;                                       
+                } 
+                
+}
+else if(opcode=="111111"){
+    new_state.EX.run=0;
+    new_state.ID.run=1;
+    new_state.EX.wrt_enable=0;
+    new_state.EX.rd_mem=0;
+    new_state.EX.wrt_mem=0;
+    new_state.IF.PC=(new_state.EX.immd.to_ulong())*4-4;
+    new_state.IF.run=0;
+state=new_state;
+cycle_no++;
+continue;
+}
+ if ((0 == state.EX.run)&&(1 == state.EX.wrt_enable))   
+            {
+                if ((state.EX.Wrt_reg == reg_Rd) || ((state.EX.Wrt_reg== Rt) ) )  
+                {            
+                         
+                    new_state.EX.run = 1;
+                    new_state.ID = state.ID;
+                    new_state.IF = state.IF;
+                    
+                   
+                    state = new_state;
+                     
+                    cycle_no ++;
+                   
+                    continue;
+                }  
+            }
+            if ((0 == state.EX.run)&&(1 == state.EX.wrt_enable))
+            {
+                if ((state.MEM.Wrt_reg == reg_Rd) || ((state.MEM.Wrt_reg== Rt) ) )  
+                {            
+                         
+                    new_state.EX.run = 1;
+                    new_state.ID = state.ID;
+                    new_state.IF = state.IF;
+                    
+                   
+                    state = new_state;
+                     
+                    cycle_no ++;
+                    
+                    continue;
+                }  
+            }
+        }
+    
+new_state.EX.run = state.ID.run;
+
+
+                     
+
+                      /**fetch**/
+        if(state.IF.run==0){
+            INSTRUCTION=myInsMem.read_Instruction(state.IF.PC);
+            if(INSTRUCTION==0x00000000)
+            {    state.IF.PC+=4;
+                INSTRUCTION=myInsMem.read_Instruction(state.IF.PC);
+
+            }
+            if(INSTRUCTION!=0xffffffff){
+new_state.IF.PC=state.IF.PC+4;
+new_state.IF.run=0;
+cycle_no++;
+            }
+            else{
+                state.IF.run=1;
+                new_state.IF.PC=state.IF.PC;
+                new_state.IF.run=1;
+            }
+            new_state.ID.Instruct=INSTRUCTION;
+        }
+        new_state.ID.run=state.IF.run;
+
+if(state.IF.run&&state.ID.run&&state.EX.run&&state.MEM.run&&state.WB.run)
+    break;
+
+//break;
+
+
+state=new_state;cycle_no++;
+
+     }
+cout<<"total number of clock cycles : "<<cycle_no<<endl;
+     for(int i=0;i<32;i++){
+        cout<<"register "<<i<<" : "<<Reg[i]<<endl;
+     }
+    return 0;
+}
