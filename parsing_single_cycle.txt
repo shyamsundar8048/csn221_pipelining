@@ -1,0 +1,239 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int string_to_int(string s){
+        int n=0;
+        int p=s.length();
+        for(int i=p-1;i>=0;i--){
+        int k=s[i]-48;
+        int j=p-1-i;
+            n=n+k*((int)(pow(10,j)));
+        }
+        return n;
+    }
+void print(string s){
+    cout<<s.substr(0,8)<<endl;
+    cout<<s.substr(8,8)<<endl;
+    cout<<s.substr(16,8)<<endl;
+    cout<<s.substr(24,8)<<endl;
+}
+int main() {    
+    // your code goes here
+    string s;
+    ifstream MyReadFile("inputf.in");
+    while (getline (MyReadFile, s))
+    { 
+    string s1,s2,s3="";
+    
+    int j;
+    for(int i=0;i<s.length();i++){
+        if(s[i]==' '){
+            j=i;
+            break;
+        }
+        else s1=s1+s[i];
+    }
+ if(s1[s1.length()-1]=='i'||s1=="beq"||s1=="bne"){
+int bin;
+    if(s1=="addi") {
+        s2=s2+"001000";
+        bin=0;}
+    else if(s1=="subi"){
+     s2=s2+"001001";
+     bin=0;}
+        else if(s1=="muli"){
+     s2=s2+"001010";
+     bin=0;}
+        else if(s1=="divi"){
+     s2=s2+"001011";
+     bin=0;}
+     else if(s1=="beq"){
+        s2=s2+"001111";
+        bin=1;
+     }
+      else if(s1=="bne"){
+        s2=s2+"010000";
+        bin=1;
+     }
+    s1="";
+    int n;
+    for(int i=j+1;i<s.length();i++){
+        if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }
+    }
+    if(s1[0]=='$'){
+         n = string_to_int(s1.substr(1,s1.length()-1));
+        s2=s2+bitset<5>(n).to_string();
+    }
+    else{
+         n= string_to_int(s1);
+        s2=s2+bitset<16>(n).to_string();
+    }
+        s1="";
+    for(int i=j;i<s.length();i++){
+       if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }
+    }
+    if(s1[0]=='$'){
+         n = string_to_int(s1.substr(1,s1.length()-1));
+        s2=s2+bitset<5>(n).to_string();
+    }
+    else{
+        n= string_to_int(s1);
+        s2=s2+bitset<16>(n).to_string();
+    }
+        s1="";
+    for(int i=j;i<s.length();i++){
+        if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }
+    }
+    if(bin==0){
+        n= string_to_int(s1);}
+        else if(bin==1){
+ifstream MyReadFile2("inputf.in");
+    string str;
+    n=0;
+    while (getline (MyReadFile2, str)){
+if (str.substr(0,str.length()-1)==s1) break;
+else n++;
+}
+        }
+        s2=s2+bitset<16>(n).to_string();
+    print(s2);}
+    
+    
+    else if(s1[s1.length()-1]=='w'){
+        if(s1=="sw") s2=s2+"010010";
+        else s2=s2+"010001";
+        s1="";
+        int n;
+    for(int i=j+1;i<s.length();i++){
+        if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }}
+          n = string_to_int(s1.substr(1,s1.length()-1));
+        s2=s2+bitset<5>(n).to_string();
+        s1="";
+            for(int i=j;i<s.length();i++){
+        if(s[i]=='('){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }}
+         n = string_to_int(s1);
+        string p=bitset<16>(n).to_string();
+        s1="";
+            for(int i=j;i<s.length();i++){
+        if(s[i]==')'){
+        break;}
+        else{
+            s1=s1+s[i];
+        }}
+         n = string_to_int(s1.substr(1,s1.length()-1));
+        s2=s2+bitset<5>(n).to_string();
+        s2=s2+p;
+        print(s2);
+    }
+    
+    else if(s1=="add"||s1=="sub"||s1=="mul"||s1=="div"||s1=="and"||s1=="or"||s1=="xor"){
+s2=s2+"000000";
+string p;
+int n;
+if(s1=="add") p="100000";
+else if(s1=="sub") p="100001";
+else if(s1=="mul") p="100010";
+else if(s1=="div") p="100011";
+else if(s1=="and") p="100100";
+else if(s1=="or") p="100101";
+else if(s1=="xor") p="100110";
+s1="";
+    for(int i=j+1;i<s.length();i++){
+        if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }
+    }
+    if(s1[0]=='$'){
+         n = string_to_int(s1.substr(1,s1.length()-1));
+        s3=bitset<5>(n).to_string();
+    }
+        s1="";
+    for(int i=j;i<s.length();i++){
+       if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }
+    }
+    if(s1[0]=='$'){
+         n = string_to_int(s1.substr(1,s1.length()-1));
+        s2=s2+bitset<5>(n).to_string();
+    }
+        s1="";
+    for(int i=j;i<s.length();i++){
+        if(s[i]==','){
+            j=i+1;
+        break;}
+        else{
+            s1=s1+s[i];
+        }
+    }
+    if(s1[0]=='$'){
+          n = string_to_int(s1.substr(1,s1.length()-1));
+        s2=s2+bitset<5>(n).to_string();
+    }
+s2=s2+s3;
+    s2=s2+"00000";
+s2=s2+p;
+print(s2);
+    }
+
+
+    else if(s1=="j"){
+        s2=s2+"111111";
+        s1="";
+        for(int i=j+1;i<s.length();i++){
+            s1=s1+s[i];
+        }
+    ifstream MyReadFile1("inputf.in");
+    string str;
+    int n=1;
+    while (getline (MyReadFile1, str)){
+if (str.substr(0,str.length()-1)==s1) break;
+else n++;
+}
+    s2=s2+bitset<26>(n+1).to_string();
+    print(s2);
+    }
+
+    else if(s1[0]!='*'){
+        s2=bitset<32>(0).to_string();
+        print(s2);
+    }
+
+    else {
+        s2="11111111111111111111111111111111";
+        print(s2);
+}
+}
+    return 0;
+}
