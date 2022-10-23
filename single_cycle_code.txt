@@ -1,0 +1,291 @@
+#include <bits/stdc++.h>
+using namespace std;
+string ins_mem[1024*64];
+int data_mem[1024*512];
+string inst;
+int PC=0;int j=0;
+string check_s1;string check_s2;string s4;
+string s5;string s6;string s7;string s8;
+string opcode;
+int write_rd;
+string func;
+bitset<32> REG[32];
+bitset<32> $s;
+bitset<32> $t;
+bitset<32> rd;
+bitset<32> addr;
+string final_imm_addr;
+
+void ins_fetch(){                                                                                                                                                                                                                               
+     inst=ins_mem[PC]+ins_mem[PC+1]+ins_mem[PC+2]+ins_mem[PC+3];
+    PC=PC+4;
+    j=PC;
+}
+
+int  bin_to_int(string y)
+{
+        int x=0,count=0;
+        int n=y.length();
+        
+        for(int i=n-1;i>=0;i--)
+        {
+                y[i]=y[i]-48;
+                x=x+(y[i]*((int)pow(2,count)));
+                count++;
+                
+        }
+        return x;
+}
+
+    
+string instruction_type(string opcode){
+    if(opcode=="000000")
+    return "R";
+    else if(opcode=="001000"||opcode=="001001"||opcode=="001010"||opcode=="001011"||opcode=="001100"||opcode=="001101"||opcode=="001110"||opcode=="001111"||opcode=="010000"||opcode=="010001"||opcode=="010010")
+    return "I";
+    else
+    return "J";
+    
+}
+string func_type(string s){
+    if(s=="100000")
+    return "add";
+    else if(s=="100001")
+    return "sub";
+    else if(s=="100010")
+    return "mul";
+    else if(s=="100011")
+    return "div";
+    else if(s=="100100")
+    return "and";
+    else if(s=="100101")
+    return "or";
+    else if(s=="100110")
+    return "xor";
+    else 
+    return "error";
+    
+}
+
+string func_type_i(string s){
+    if(s=="001000")
+    return "add";
+    else if(s=="001001")
+    return "sub";
+    else if(s=="001010")
+    return "mul";
+    else if(s=="001011")
+    return "div";
+    else if(s=="001100")
+    return "and";
+    else if(s=="001101")
+    return "or";
+    else if(s=="001110")
+    return "xor";
+    else 
+    return "error";
+    
+}
+    
+class Decode{
+    public:
+    bitset<32> read_rs;
+    bitset<32> read_rt;
+    
+    
+    void readreg(int rs,int rt){
+    
+        read_rs=REG[rs];
+        read_rt=REG[rt];
+     }
+    
+};
+
+
+class ALU_UNIT{
+        public:
+   void alu_operations(bitset<32> $rs1,bitset<32> $rt1,int index_rd,string type_func){
+        int rs1=$rs1.to_ulong();
+         int rt1=$rt1.to_ulong();
+
+        if(type_func=="add"){
+                REG[index_rd]=bitset<32>(rs1+rt1);
+                
+        }
+        else if(type_func=="sub"){
+                REG[index_rd]=bitset<32>(rs1-rt1);
+        }
+        else if(type_func=="mul"){
+                REG[index_rd]=bitset<32>(rs1*rt1);
+        }
+        else if(type_func=="div"){
+                REG[index_rd]=bitset<32>(rs1/rt1);
+        }
+        else if(type_func=="and"){
+                REG[index_rd]=bitset<32>(rs1&rt1);
+        }
+        else if(type_func=="or"){
+                REG[index_rd]=bitset<32>(rs1|rt1);
+        }
+        else if(type_func=="xor"){
+                REG[index_rd]=bitset<32>(rs1^rt1);
+        }  
+    }
+
+
+    void jump_b_to(int data_$s,int data_$t,int imm_value){
+        //beq
+        if(opcode=="001111"){
+        if(data_$s==data_$t){
+             
+               PC=4*imm_value;
+               j=PC;
+           }
+          }     
+        //bne
+         else if(opcode=="010000"){
+         if(data_$s!=data_$t){
+         
+         PC=4*imm_value;
+         j=PC;}   
+     }
+    }
+  
+  void cal_addr(int data_$s,int imm_value){
+      int addre=data_$s+imm_value;
+      addr=bitset<32>(addre);
+
+  }
+   
+    void jump_j_to(int address){
+         
+      PC=4*address-4;
+       j=PC;
+    }
+  };
+
+  void load_mem(int address,int reg){
+    REG[reg]=bitset<32>(data_mem[address]);
+    
+  }
+  void store_mem(int address,int reg){
+    data_mem[address]=REG[reg].to_ulong();
+  
+  }
+
+
+int main() {
+
+    Decode myDecode;
+    ALU_UNIT myALU_UNIT;
+    check_s1=bitset<32>(0).to_string();
+    check_s2=bitset<32>(1).to_string();
+    string s;int i=0;
+    ifstream MyReadFile1("inputf.in");
+   // REG[0]=bitset<32>(0);REG[1]=bitset<32>(2);
+    //REG[2]=bitset<32>(3);REG[3]=bitset<32>(4);
+    //REG[4]=bitset<32>(5);REG[5]=bitset<32>(6);
+
+    while (getline (cin, s))
+    {   
+       
+        ins_mem[i]=s;
+        i++;
+        
+    }
+    i--;
+    cout<<i<<endl;
+    cout<<endl;
+    for(j=0;j<i;){
+     // cout<<PC<<" "<<endl;
+        ins_fetch();
+       
+        opcode=inst.substr(0,6);
+        string type_of_instruction=instruction_type(opcode);
+      if(check_s1!=inst&&check_s2!=inst){
+        if(type_of_instruction=="R"){
+        //cout<<"r"<<endl;
+                int int_index_rs=bin_to_int(inst.substr(6,5));
+                int int_index_rt=bin_to_int(inst.substr(11,5));
+                int int_index_rd=bin_to_int(inst.substr(16,5));
+        
+                myDecode.readreg(int_index_rs,int_index_rt);
+                $s=myDecode.read_rs;
+                $t=myDecode.read_rt;
+                string type_func=func_type(inst.substr(26,6));
+                myALU_UNIT.alu_operations($s,$t,int_index_rd,type_func);
+               
+        }  
+
+        else if(type_of_instruction=="I" )
+         {//cout<<"i"<<endl;
+                
+        
+                int int_index_rt=bin_to_int(inst.substr(6,5));
+                int int_index_rs=bin_to_int(inst.substr(11,5));
+                string imm_i=inst.substr(16,16);
+
+                if (imm_i[0] == '0') {
+                    final_imm_addr = "0000000000000000" + imm_i;
+                } 
+                else{
+                    final_imm_addr = "1111111111111111" + imm_i;
+                }int f=bin_to_int(final_imm_addr);
+                bitset<32> imt=bitset<32>(f);
+
+                if(opcode!="001111"&&opcode!="010000"&&opcode!="010001"&&opcode!="010010"){
+                myDecode.readreg(int_index_rs,0);
+                $s=myDecode.read_rs;
+                string type_func=func_type_i(inst.substr(0,6));
+
+                myALU_UNIT.alu_operations($s,imt,int_index_rt,type_func);
+ 
+                }
+                else if(opcode=="001111"||opcode=="010000"){
+                //bne beq statements
+                myDecode.readreg(int_index_rs,int_index_rt);
+                $s=myDecode.read_rs;
+                $t=myDecode.read_rt;
+                int data_$s=$s.to_ulong();
+                int data_$t=$t.to_ulong();
+                int imm_value=imt.to_ulong();
+                myALU_UNIT.jump_b_to(data_$s,data_$t,imm_value);
+                //cout<<data_$s<<" "<<data_$t<<" "<<imm_value<<endl;
+                }    
+                else{  
+              // load store type
+                myDecode.readreg(int_index_rs,0);
+                $s=myDecode.read_rs;
+                int data_$s=$s.to_ulong();
+                int imm_value=imt.to_ulong();
+                myALU_UNIT.cal_addr(data_$s,imm_value);
+                if(opcode=="010001"){
+                    int int_addr=addr.to_ulong();
+                    load_mem(int_addr,int_index_rt);
+                }
+                else{   
+                    int int_addr=addr.to_ulong();
+
+                    store_mem(int_addr,int_index_rt);
+                }
+               
+                }
+                
+        }
+      string instruction=inst;
+  if(type_of_instruction=="J"){   //cout<<"j"<<endl;
+              int g=bin_to_int(inst.substr(6,26));
+                
+          myALU_UNIT.jump_j_to(g);
+
+    } //
+   
+ 
+
+}
+}for(int j=0;j<32;j++){
+cout<<"register "<<j<<":"<<REG[j]<<endl;
+}
+    return 0;
+
+}
